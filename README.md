@@ -8,8 +8,18 @@ While Gomega has matchers for channels (e.g. [Receive](http://onsi.github.io/gom
 ## Provided Matchers ##
 
 ###`EqualEach`###
-The channel must receive the *same* values provided to the matcher.
-
 ```
 Expect(helChannel).To(EqualEach(1,2,3))
 ```
+
+###`BeEquivalentToEach`###
+```
+Expect(helChannel).To(BeEquivalentToEach(1,2,3))
+```
+
+###`Each`###
+```
+Expect(helChannel).To(Each(BeEquivalentTo,1,2,3))
+```
+
+Note: `Each` is actually used by both `EqualEach` and `BeEquivalentToEach`.
