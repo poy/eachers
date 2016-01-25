@@ -6,5 +6,5 @@ import (
 )
 
 func EqualEach(values ...interface{}) gomegaTypes.GomegaMatcher {
-	return Each(gomega.Equal, values)
+	return Each(gomega.Equal, values...)
 }
