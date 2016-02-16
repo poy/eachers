@@ -70,6 +70,10 @@ var _ = Describe("BeCalled", func() {
 				Expect(fakeMock.FooInput).To(BeCalled(With("foo", 2)))
 			})
 
+			It("returns true for a partially matching call", func() {
+				Expect(fakeMock.FooInput).To(BeCalled(With("foo")))
+			})
+
 			It("returns false for a non-matching call", func() {
 				Expect(fakeMock.FooInput).ToNot(BeCalled(With("bar", 1)))
 			})
