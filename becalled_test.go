@@ -44,7 +44,11 @@ var _ = Describe("BeCalled", func() {
 
 	Describe("Expect", func() {
 		Context("no method calls", func() {
-			It("returns false", func() {
+			It("returns false for the called channel", func() {
+				Expect(fakeMock.FooCalled).ToNot(BeCalled())
+			})
+
+			It("returns false for the input struct", func() {
 				Expect(fakeMock.FooInput).ToNot(BeCalled())
 			})
 		})
@@ -54,7 +58,11 @@ var _ = Describe("BeCalled", func() {
 				fakeMock.Foo("foo", 2)
 			})
 
-			It("returns true for a single call", func() {
+			It("returns true for the called channel", func() {
+				Expect(fakeMock.FooCalled).To(BeCalled())
+			})
+
+			It("returns true for an empty call", func() {
 				Expect(fakeMock.FooInput).To(BeCalled())
 			})
 
