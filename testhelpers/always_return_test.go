@@ -1,5 +1,3 @@
-//go:generate hel
-
 package testhelpers_test
 
 import (
