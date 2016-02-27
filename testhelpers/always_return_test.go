@@ -5,6 +5,7 @@ import (
 	"github.com/apoydence/eachers/testhelpers"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -15,18 +16,28 @@ var _ = Describe("AlwaysReturn", func() {
 
 	Context("given a struct with channels", func() {
 		type sampleStruct struct {
-			A chan int
+			A chan int32
 			B chan string
+		}
+
+		type invalidStruct struct {
+			A chan int
+			B string
 		}
 
 		var (
 			receiver sampleStruct
+			invalid  invalidStruct
 		)
 
 		BeforeEach(func() {
 			receiver = sampleStruct{
-				A: make(chan int, 100),
+				A: make(chan int32, 100),
 				B: make(chan string, 100),
+			}
+
+			invalid = invalidStruct{
+				A: make(chan int, 100),
 			}
 		})
 
@@ -45,26 +56,21 @@ var _ = Describe("AlwaysReturn", func() {
 			It("sends the expected argument", func() {
 				testhelpers.AlwaysReturn(receiver, args...)
 
-				Eventually(receiver.A).Should(Receive(Equal(args[0])))
+				Eventually(receiver.A).Should(Receive(BeEquivalentTo(args[0])))
 				Eventually(receiver.B).Should(Receive(Equal(args[1])))
 			})
 		})
 
-		Context("invalid args", func() {
-			It("not enough arguments", func() {
-				f := func() {
-					testhelpers.AlwaysReturn(receiver, args[:1])
-				}
-				Expect(f).To(Panic())
-			})
-
-			It("wrong argument type", func() {
-				f := func() {
-					testhelpers.AlwaysReturn(receiver, 99, 100)
-				}
-				Expect(f).To(Panic())
-			})
-		})
+		DescribeTable("invalid args", func(rx interface{}, args ...interface{}) {
+			f := func() {
+				testhelpers.AlwaysReturn(rx, args...)
+			}
+			Expect(f).To(Panic())
+		},
+			Entry("not enough arguments", receiver, 99),
+			Entry("wrong argument type", receiver, 99, invalid),
+			Entry("receiver doesn't have channel type", invalid, 0, ""),
+		)
 	})
 
 	Context("given a channel", func() {
@@ -92,6 +98,31 @@ var _ = Describe("AlwaysReturn", func() {
 				testhelpers.AlwaysReturn(channel, args...)
 
 				Eventually(channel).Should(Receive(Equal(args[0])))
+			})
+
+			Context("channel with a type that has bit width", func() {
+				var (
+					bitWidthChannel chan int32
+				)
+
+				BeforeEach(func() {
+					bitWidthChannel = make(chan int32, 100)
+				})
+
+				It("accepts a convertable type", func() {
+					f := func() {
+						testhelpers.AlwaysReturn(bitWidthChannel, args...)
+					}
+
+					f()
+					Expect(f).ToNot(Panic())
+				})
+
+				It("sends the expected argument", func() {
+					testhelpers.AlwaysReturn(channel, args...)
+
+					Eventually(channel).Should(Receive(Equal(args[0])))
+				})
 			})
 		})
 

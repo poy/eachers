@@ -38,6 +38,11 @@ func writeToChannel(ch interface{}, arg interface{}) {
 }
 
 func doChanWrite(valCh, argVal reflect.Value) {
+	chType := valCh.Type().Elem()
+	if argVal.Type().ConvertibleTo(chType) {
+		argVal = argVal.Convert(chType)
+	}
+
 	for {
 		valCh.Send(argVal)
 	}
@@ -98,7 +103,7 @@ func validChannelArgs(receiver interface{}, args []interface{}) {
 
 	argType := reflect.TypeOf(args[0])
 	chType := reflect.TypeOf(receiver)
-	if !argType.AssignableTo(chType.Elem()) {
+	if !argType.AssignableTo(chType.Elem()) && !argType.ConvertibleTo(chType.Elem()) {
 		panic("channel type and argument type have to match")
 	}
 }
@@ -111,8 +116,9 @@ func validStructArgs(receiver interface{}, args []interface{}) {
 
 	for i, arg := range args {
 		argType := reflect.TypeOf(arg)
+		chType := structType.Field(i).Type.Elem()
 
-		if !argType.AssignableTo(structType.Field(i).Type.Elem()) {
+		if !argType.AssignableTo(chType) && !argType.ConvertibleTo(chType) {
 			panic("a struct requires the same type for each arguments")
 		}
 	}
