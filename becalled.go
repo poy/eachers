@@ -62,7 +62,7 @@ func (c *Called) Match(actual interface{}) (success bool, err error) {
 			if i >= len(call) {
 				continue
 			}
-			if call[i] != recvd {
+			if !reflect.DeepEqual(call[i], recvd) {
 				success = false
 				c.failedCall = call
 				failure := matchFailure{name: arg.name, expected: call[i], actual: recvd}
