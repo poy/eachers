@@ -12,17 +12,23 @@ import (
 
 type fakeMock struct {
 	FooCalled chan bool
+	BazCalled chan bool
 	FooInput  struct {
 		Foo chan string
 		Bar chan int
+	}
+	BazInput struct {
+		Baz chan []int
 	}
 }
 
 func newFakeMock() *fakeMock {
 	m := &fakeMock{}
 	m.FooCalled = make(chan bool, 100)
+	m.BazCalled = make(chan bool, 100)
 	m.FooInput.Foo = make(chan string, 100)
 	m.FooInput.Bar = make(chan int, 100)
+	m.BazInput.Baz = make(chan []int, 100)
 	return m
 }
 
@@ -30,6 +36,11 @@ func (m *fakeMock) Foo(foo string, bar int) {
 	m.FooCalled <- true
 	m.FooInput.Foo <- foo
 	m.FooInput.Bar <- bar
+}
+
+func (m *fakeMock) Baz(baz []int) {
+	m.BazCalled <- true
+	m.BazInput.Baz <- baz
 }
 
 var _ = Describe("BeCalled", func() {
@@ -76,6 +87,21 @@ var _ = Describe("BeCalled", func() {
 
 			It("returns false for a non-matching call", func() {
 				Expect(fakeMock.FooInput).ToNot(BeCalled(With("bar", 1)))
+			})
+
+		})
+
+		Context("a method called with an array", func() {
+			BeforeEach(func() {
+				fakeMock.Baz([]int{1, 2, 3})
+			})
+
+			It("returns true for a matching array", func() {
+				Expect(fakeMock.BazInput).To(BeCalled(With([]int{1, 2, 3})))
+			})
+
+			It("returns false for a non-matching array", func() {
+				Expect(fakeMock.BazInput).ToNot(BeCalled(With([]int{4, 5, 7})))
 			})
 		})
 
