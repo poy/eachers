@@ -6,5 +6,5 @@ import (
 )
 
 func BeEquivalentToEach(values ...interface{}) gomegaTypes.GomegaMatcher {
-	return Each(gomega.BeEquivalentTo, values)
+	return Each(gomega.BeEquivalentTo, values...)
 }
