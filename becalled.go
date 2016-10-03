@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/onsi/gomega/types"
 )
 
 type matchFailure struct {
@@ -22,8 +24,7 @@ type arg struct {
 type Called struct {
 	calls         [][]interface{}
 	matched       [][]interface{}
-	matchFailures []matchFailure
-	failedCall    []interface{}
+	matchFailures []string
 }
 
 // BeCalled takes 0 or more slices of arguments and returns a Called
@@ -62,11 +63,21 @@ func (c *Called) Match(actual interface{}) (success bool, err error) {
 			if i >= len(call) {
 				continue
 			}
-			if !reflect.DeepEqual(call[i], recvd) {
-				success = false
-				c.failedCall = call
-				failure := matchFailure{name: arg.name, expected: call[i], actual: recvd}
-				c.matchFailures = append(c.matchFailures, failure)
+			switch src := call[i].(type) {
+			case types.GomegaMatcher:
+				matched, err := src.Match(recvd)
+				if err != nil {
+					return false, err
+				}
+				if !matched {
+					success = false
+					c.matchFailures = append(c.matchFailures, fmt.Sprintf("%s: %s", arg.name, src.FailureMessage(recvd)))
+				}
+			default:
+				if !reflect.DeepEqual(call[i], recvd) {
+					success = false
+					c.matchFailures = append(c.matchFailures, fmt.Sprintf("%s: %v (expected) != %v (actual)", arg.name, call[i], recvd))
+				}
 			}
 		}
 		if !success {
@@ -95,20 +106,21 @@ func receiveArg(arg arg) (interface{}, bool) {
 
 // FailureMessage returns the message when c failed to match a call.
 func (c *Called) FailureMessage(actual interface{}) (message string) {
-	message = "Expected to be called with args:\n"
-	for _, failure := range c.matchFailures {
-		message += fmt.Sprintf("%s: %v (expected) != %v (actual)\n", failure.name, failure.expected, failure.actual)
+	message = fmt.Sprintf("Expected %#v to be called", actual)
+	if len(c.matchFailures) == 0 {
+		return message
 	}
-	return message
+	return message + " with args:\n" + strings.Join(c.matchFailures, "\n")
 }
 
 // NegatedFailureMessage returns the message when c matched a call and
 // shouldn't have.
 func (c *Called) NegatedFailureMessage(actual interface{}) (message string) {
-	if len(c.calls) == 0 {
-		return "Expected not to be called"
+	msg := fmt.Sprintf("Expected %#v not to be called", actual)
+	if len(c.matched[0]) == 0 {
+		return msg
 	}
-	return fmt.Sprintf("Expected not to be called with args (%s)", joinInter(c.failedCall, ", "))
+	return fmt.Sprintf("%s with args (%s)", msg, joinInter(c.matched[0], ", "))
 }
 
 func joinInter(a []interface{}, sep string) string {
