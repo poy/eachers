@@ -85,10 +85,13 @@ var _ = Describe("BeCalled", func() {
 				Expect(fakeMock.FooInput).To(BeCalled(With("foo")))
 			})
 
+			It("returns true for a successfully matched GinkgoMatcher", func() {
+				Expect(fakeMock.FooInput).To(BeCalled(With("foo", BeNumerically(">", 1))))
+			})
+
 			It("returns false for a non-matching call", func() {
 				Expect(fakeMock.FooInput).ToNot(BeCalled(With("bar", 1)))
 			})
-
 		})
 
 		Context("a method called with an array", func() {
