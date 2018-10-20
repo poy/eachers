@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	. "github.com/apoydence/eachers"
+	. "github.com/poy/eachers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

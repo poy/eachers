@@ -1,8 +1,8 @@
 package testhelpers_test
 
 import (
-	"github.com/apoydence/eachers"
-	"github.com/apoydence/eachers/testhelpers"
+	"github.com/poy/eachers"
+	"github.com/poy/eachers/testhelpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
